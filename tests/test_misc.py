@@ -15,3 +15,9 @@ def test_version():
     client = Docker()
     version = yield from client.version()
     assert client.api_version == version['api_version'], 'api versions should be equals'
+
+
+@async_test
+def test_ping():
+    client = Docker()
+    assert (yield from client.ping())

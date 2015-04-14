@@ -5,6 +5,7 @@ import shlex
 
 Port = namedtuple('Port', 'port protocol bindings')
 Field = namedtuple('Field', 'name aliases func')
+SearchResult = namedtuple('SearchResult', 'name is_official is_trusted star_count description')
 
 
 class Container(dict):
@@ -238,6 +239,13 @@ def from_port_bindings(data):
 def from_restart_policy(data):
     response, remains = vars(from_restart_policy)['fields'].consume(data)
     return response
+
+
+def from_search_results(data):
+
+    def formatter(data):
+        return SearchResult(**data)
+    return [formatter(elements) for elements in data]
 
 
 def from_unixtime(data):

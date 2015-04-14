@@ -12,3 +12,10 @@ def test_delete():
         if '<none>:<none>' in image['repo_tags']:
             deleted = yield from client.images.delete(image['id'], force=True)
             assert deleted, 'cannot remove image'
+
+
+@async_test
+def test_pull():
+    client = Docker()
+    images = yield from client.images.items()
+

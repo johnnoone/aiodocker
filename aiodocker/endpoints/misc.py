@@ -9,11 +9,11 @@ log = logging.getLogger(__name__)
 class MiscEndpoint:
 
     def __init__(self, client):
-        self.client = client
+        self.api = client
 
     @task
     def info(self):
-        response = yield from self.client.get('info')
+        response = yield from self.api.get('info')
         if response.status == 200:
             data = yield from response.json()
             return from_info(data)
@@ -22,7 +22,7 @@ class MiscEndpoint:
 
     @task
     def version(self):
-        response = yield from self.client.get('version')
+        response = yield from self.api.get('version')
         if response.status == 200:
             data = yield from response.json()
             return from_version(data)
@@ -31,8 +31,11 @@ class MiscEndpoint:
 
     @task
     def ping(self):
-        response = yield from self.client.get('_ping')
-        if response.status == 200:
-            return True
-        data = yield from response.text()
-        raise UnexpectedError(response.status, data)
+        """
+        Ping server.
+
+        Returns
+            bool: True if it's ok
+        """
+        response = yield from self.api.get('_ping')
+        return response.status == 200

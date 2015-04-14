@@ -39,6 +39,11 @@ class Docker:
     def misc(self):
         return endpoints.MiscEndpoint(self.docker_handler)
 
+    @lazy_property
+    def docker_hub(self):
+        """Connect to DockerHub"""
+        return endpoints.DockerHubEndpoint(self.docker_handler)
+
     def __getattr__(self, name):
         if hasattr(self.misc, name):
             return getattr(self.misc, name)

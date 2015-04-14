@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class ImagesEndpoint:
 
     def __init__(self, client):
-        self.client = client
+        self.api = client
 
     @task
     def items(self, *, status=None):
@@ -22,7 +22,7 @@ class ImagesEndpoint:
         if status == 'dangling':
             params['filters'] = json.dumps({'dangling': True})
 
-        response = yield from self.client.get(path, params=params)
+        response = yield from self.api.get(path, params=params)
         if response.status == 200:
             data = yield from response.json()
             return from_images(data)
@@ -44,7 +44,7 @@ class ImagesEndpoint:
     def inspect(self, ref):
         path = '/images/%s/json' % ref
 
-        response = yield from self.client.get(path)
+        response = yield from self.api.get(path)
         if response.status == 200:
             data = yield from response.json()
             return data
@@ -60,7 +60,7 @@ class ImagesEndpoint:
     def history(self, ref):
         path = '/images/%s/history' % ref
 
-        response = yield from self.client.get(path)
+        response = yield from self.api.get(path)
         if response.status == 200:
             data = yield from response.json()
             return from_history(data)
@@ -86,7 +86,7 @@ class ImagesEndpoint:
             'force': force
         }
 
-        response = yield from self.client.post(path, params=params)
+        response = yield from self.api.post(path, params=params)
         if response.status == 201:
             return True
 
@@ -95,7 +95,7 @@ class ImagesEndpoint:
             raise ValidationError(data)
         if response.status == 404:
             raise NotFound(data)
-        if response.status == 409:
+        elif response.status == 409:
             raise ConflictError(data)
         elif response.status == 500:
             raise ServerError(data)
@@ -113,30 +113,15 @@ class ImagesEndpoint:
             'force': force
         }
 
-        response = yield from self.client.delete(path, params=params)
+        response = yield from self.api.delete(path, params=params)
         if response.status == 200:
             return True
         elif response.status == 404:
             return False
 
         data = yield from response.text()
-        if response.status == 500:
-            raise ServerError(data)
-        raise UnexpectedError(response.status, data)
-
-    @task
-    def search(self, ref, *, term):
-        path = '/images/search'
-        params = {
-            'term': term
-        }
-
-        response = yield from self.client.get(path, params=params)
-        if response.status == 200:
-            data = yield from response.json()
-            return data
-
-        data = yield from response.text()
-        if response.status == 500:
+        if response.status == 409:
+            raise ConflictError(data)
+        elif response.status == 500:
             raise ServerError(data)
         raise UnexpectedError(response.status, data)
