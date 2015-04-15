@@ -19,7 +19,7 @@ def test_pull():
     ref = 'gliderlabs/alpine:2.6'
 
     pulled = yield from client.docker_hub.pull(ref)
-    assert pulled, 'Should download alpine:2.6'
+    assert pulled, 'Should download gliderlabs/alpine:2.6'
 
     # is it present locally?
     image = yield from client.images.inspect(ref)
@@ -37,7 +37,7 @@ def test_pull():
     assert started
 
     pulled = yield from client.docker_hub.pull(ref)
-    assert pulled, 'Should still download another alpine:2.6'
+    assert pulled, 'Should still download gliderlabs/alpine:2.6'
 
     with pytest.raises(ConflictError):
         destroyed = yield from client.images.delete(ref)
@@ -46,5 +46,11 @@ def test_pull():
     removed = yield from client.containers.remove(container_id)
     assert removed, 'Should remove container'
 
+    images = yield from client.images.items()
+    assert {'repo_tags': [ref]} in images, 'Should be present'
+
     destroyed = yield from client.images.delete(ref)
     assert destroyed, 'Should be destroyed'
+
+    images = yield from client.images.items()
+    assert {'repo_tags': [ref]} not in images, 'Should be absent'

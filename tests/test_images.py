@@ -8,7 +8,6 @@ def test_delete():
     client = Docker()
     images = yield from client.images.items()
     for image in images:
-        print(image['repo_tags'])
         if '<none>:<none>' in image['repo_tags']:
             deleted = yield from client.images.delete(image['id'], force=True)
             assert deleted, 'cannot remove image'

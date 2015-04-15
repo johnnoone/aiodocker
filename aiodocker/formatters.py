@@ -25,6 +25,18 @@ class Container(dict):
         return False
 
 
+class Image(dict):
+    def __eq__(self, other):
+        """
+        Allows to compare by repo_tags.
+        """
+        if isinstance(other, dict):
+            other_id = other.get('repo_tags', None)
+            if 'repo_tags' in self and self['repo_tags'] == other_id:
+                return True
+        return False
+
+
 def yield_fields(fields):
     return YieldFields(fields)
 
@@ -158,7 +170,7 @@ def from_images(data):
 
 def from_image(data):
     response, remains = vars(from_image)['fields'].consume(data)
-    return response
+    return Image(response)
 
 
 def from_image_inspect(data):

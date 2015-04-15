@@ -78,7 +78,6 @@ class ContainersEndpoint:
                                             headers=headers)
         if response.status == 201:
             data = yield from response.json()
-            print(data)
             for warn in (data.get('Warnings') or []):
                 log.warn(warn)
             return data['Id']

@@ -59,9 +59,3 @@ def test_conflict():
 
     deleted = yield from client.containers.delete(container_id)
     assert not deleted, 'Should be already deleted'
-
-    # print(data_1)
-    # print('all', c1)
-    # print('run', c2)
-    # print('exi', c3)
-    # assert False, data_1

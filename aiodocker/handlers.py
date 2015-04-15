@@ -63,7 +63,6 @@ class DockerHandler:
         params = kwargs.get('params', {}).copy()
         kwargs['params'] = parameters(params)
         kwargs.setdefault('connector', self.connector)
-        print(url)
         response = yield from aiohttp.request(method, url, **kwargs)
         return response
 
