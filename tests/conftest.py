@@ -5,7 +5,6 @@ import os
 import os.path
 import pytest
 import sys
-from aioconsul import Consul
 from functools import wraps
 from subprocess import Popen, PIPE
 from time import sleep
