@@ -9,13 +9,13 @@ def test_conflict():
     client = Docker()
     conf = {
         'name': 'aio-1',
-        'image': 'gliderlabs/alpine:latest',
+        'image': 'gliderlabs/alpine:3.1',
         'command': ['echo', 'Foo']
     }
 
 
-    pulled = yield from client.docker_hub.pull('gliderlabs/alpine:latest')
-    assert pulled, 'Should download alpine:latest'
+    pulled = yield from client.docker_hub.pull('gliderlabs/alpine:3.1')
+    assert pulled, 'Should download alpine:3.1'
 
 
     with pytest.raises(NotFound):
@@ -41,7 +41,7 @@ def test_conflict():
     assert {'id': container_id} not in containers, 'Must not be running'
 
     containers = yield from client.containers.items(status='exited')
-    assert {'id': container_id} in containers, 'Must not be exited'
+    assert {'id': container_id} in containers, 'Must be exited'
 
     started = yield from client.containers.start(container_id)
     assert started
