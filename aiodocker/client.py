@@ -9,7 +9,7 @@ __all__ = ['Docker']
 class Docker:
 
     def __init__(self, host=None, *, cert_path=None, tls_verify=None):
-        version = '1.17'
+        version = '1.14'
 
         if host is None:
             # load local settings with love and magic
