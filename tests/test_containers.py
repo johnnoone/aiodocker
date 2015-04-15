@@ -13,6 +13,11 @@ def test_conflict():
         'command': ['echo', 'Foo']
     }
 
+
+    pulled = yield from client.docker_hub.pull('gliderlabs/alpine:latest')
+    assert pulled, 'Should download alpine:latest'
+
+
     with pytest.raises(NotFound):
         yield from client.containers.get('aio-1')
 
