@@ -49,7 +49,7 @@ def test_pull():
     images = yield from client.images.items()
     assert {'repo_tags': [ref]} in images, 'Should be present'
 
-    destroyed = yield from client.images.delete(ref)
+    destroyed = yield from client.images.delete(ref, force=True)
     assert destroyed, 'Should be destroyed'
 
     images = yield from client.images.items()
