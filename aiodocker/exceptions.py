@@ -25,3 +25,18 @@ class NotRunning(Exception):
 class ConflictError(Exception):
     """Raised when image conflicts with another"""
     pass
+
+
+class BuildError(Exception):
+    """Raised when image failed to build"""
+    pass
+
+
+class CompareError(ValueError):
+    """Raised when comparing objects"""
+    pass
+
+
+class SparseError(ValueError):
+    """Raised when comparing sparse objects"""
+    pass

@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from aiodocker import Docker
 from aiodocker import ConflictError
@@ -7,14 +8,14 @@ from conftest import async_test
 @async_test
 def test_search():
     # TODO mock result
-    client = Docker()
+    client = Docker.local_client()
     info = yield from client.docker_hub.search('ubuntu')
     assert info[0].name == 'ubuntu'
 
 
 @async_test
 def test_pull():
-    client = Docker()
+    client = Docker.local_client()
 
     ref = 'gliderlabs/alpine:2.6'
 

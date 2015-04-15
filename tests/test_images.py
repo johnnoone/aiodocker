@@ -5,7 +5,7 @@ from conftest import async_test
 
 @async_test
 def test_delete():
-    client = Docker()
+    client = Docker.local_client()
     images = yield from client.images.items()
     for image in images:
         if '<none>:<none>' in image['repo_tags']:
@@ -15,6 +15,5 @@ def test_delete():
 
 @async_test
 def test_pull():
-    client = Docker()
+    client = Docker.local_client()
     images = yield from client.images.items()
-

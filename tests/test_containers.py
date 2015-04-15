@@ -6,7 +6,7 @@ from conftest import async_test
 
 @async_test
 def test_conflict():
-    client = Docker()
+    client = Docker.local_client()
     conf = {
         'name': 'aio-1',
         'image': 'gliderlabs/alpine:3.1',

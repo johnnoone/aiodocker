@@ -1,6 +1,7 @@
 from .client import Docker
-from .exceptions import ConflictError, NotFound
+from .exceptions import BuildError, ConflictError, NotFound, SparseError
 from .handlers import DockerHandler
 
 __version__ = '0.1'
-__all__ = ['ConflictError', 'Docker', 'DockerHandler', 'NotFound']
+__all__ = ['BuildError', 'ConflictError', 'Docker',
+           'DockerHandler', 'NotFound', 'SparseError']

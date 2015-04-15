@@ -2,39 +2,97 @@ from collections import defaultdict, namedtuple
 from datetime import datetime
 import dateutil.parser
 import shlex
+from aiodocker.exceptions import CompareError, SparseError
 
 Port = namedtuple('Port', 'port protocol bindings')
 Field = namedtuple('Field', 'name aliases func')
-SearchResult = namedtuple('SearchResult', 'name is_official is_trusted star_count description')
+SearchResult = namedtuple('SearchResult', ['name',
+                                           'is_official',
+                                           'is_trusted',
+                                           'star_count',
+                                           'description'])
 
 
 class Container(dict):
-    def __eq__(self, other):
+
+    def compare(self, other):
         """
         Allows to compare by id, names and name.
+
+        Parameters:
+            other (dict): a comparable dict
+        Raises:
+            CompareError
+            SparseError
         """
-        if isinstance(other, dict):
-            other_id = other.get('id', None)
-            other_name = other.get('name', None)
-            if 'id' in self and self['id'] == other_id:
-                return True
-            elif 'name' in self and self['name'] == other_name:
+        if not isinstance(other, dict):
+            raise CompareError('other has the wrong type')
+
+        fields = ('id', 'name', 'names')
+        comparable = any(field in other for field in fields)
+        if not comparable:
+            raise CompareError('any of %s is required' % fields)
+
+        if all('id' in obj for obj in (other, self)):
+            largest, smallest = other['id'], self['id']
+            if len(other['id']) < len(self['id']):
+                largest, smallest = self['id'], other['id']
+            if not largest.startswith(smallest):
+                return False
+        elif 'id' in other and 'id' not in self:
+            raise SparseError('self is too sparse')
+
+        other_name = other.get('name', None)
+        if 'name' in other:
+            if 'name' in self and self['name'] == other_name:
                 return True
             elif 'names' in self and other_name in self['names']:
                 return True
+            else:
+                raise SparseError('self is too sparse')
         return False
+
+    __eq__ = compare
 
 
 class Image(dict):
-    def __eq__(self, other):
+
+    def compare(self, other):
         """
-        Allows to compare by repo_tags.
+        Allows to compare by repo_tags or id.
+
+        Parameters:
+            other (dict): a comparable dict
+        Raises:
+            CompareError
+            SparseError
         """
-        if isinstance(other, dict):
-            other_id = other.get('repo_tags', None)
-            if 'repo_tags' in self and self['repo_tags'] == other_id:
-                return True
-        return False
+        if not isinstance(other, dict):
+            raise CompareError('other has the wrong type')
+
+        fields = ('repo_tags', 'id')
+        comparable = any(field in other for field in fields)
+        if not comparable:
+            raise CompareError('any of %s is required' % fields)
+
+        if 'id' in other:
+            if 'id' not in self:
+                raise SparseError('self is too sparse')
+            largest, smallest = other['id'], self['id']
+            if len(other['id']) < len(self['id']):
+                largest, smallest = self['id'], other['id']
+            if not largest.startswith(smallest):
+                return False
+
+        if 'repo_tags' in other:
+            if 'repo_tags' not in self:
+                raise SparseError('self is too sparse')
+            if self['repo_tags'] != other['repo_tags']:
+                return False
+
+        return True
+
+    __eq__ = compare
 
 
 def yield_fields(fields):

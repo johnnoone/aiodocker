@@ -3,6 +3,7 @@ from aiodocker.exceptions import NotFound, ConflictError, ValidationError
 from aiodocker.exceptions import ServerError, UnexpectedError
 from aiodocker.formatters import from_search_results
 from aiodocker.helpers import stream_json
+from aiodocker.util import parse_name
 import logging
 
 
@@ -29,7 +30,7 @@ class RegistryEndpoint:
             raise ValidationError('tag cannot be declared '
                                   'into image and tag parameters')
         elif tag is None:
-            image, _, tag = image.partition(':')
+            image, tag = parse_name(image)
 
         path = '/images/create'
         params = {
@@ -64,7 +65,7 @@ class RegistryEndpoint:
             raise ValidationError('tag cannot be declared '
                                   'into image and tag parameters')
         elif tag is None:
-            image, _, tag = image.partition(':')
+            image, tag = parse_name(image)
 
         params = {}
         if tag:
@@ -102,7 +103,7 @@ class RegistryEndpoint:
             raise ValidationError('tag cannot be declared '
                                   'into image and tag parameters')
         elif tag is None:
-            image, _, tag = image.partition(':')
+            image, tag = parse_name(image)
 
         path = '/images/%s/tag' % image
         params = {}
