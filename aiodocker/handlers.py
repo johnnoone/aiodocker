@@ -10,34 +10,25 @@ __all__ = ['DockerHandler']
 
 class DockerHandler:
 
-    def __init__(self, host, version, cert_path=None, tls=None):
+    def __init__(self, host, version, cert_path=None, tls_verify=None):
         cert, cert_ca = None, None
         if cert_path:
+            cert_path = os.path.expanduser(cert_path)
             cert = (
                 os.path.join(cert_path, 'cert.pem'),
                 os.path.join(cert_path, 'key.pem')
             )
             cert_ca = os.path.join(cert_path, 'ca.pem')
 
-        parsed = urlparse(host)
-        scheme, hostname, port = parsed.scheme, parsed.hostname, parsed.port
-        scheme = 'https' if scheme == 'tcp' else scheme
+        host, socket, connector = connect(host, tls_verify, cert, cert_ca)
 
-        connector = None
-        if scheme == 'https':
-            context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-            context.verify_mode = ssl.CERT_NONE
-            context.load_cert_chain(*cert)
-            connector = aiohttp.TCPConnector(verify_ssl=True,
-                                             ssl_context=context)
-
-        host = '%s://%s%s' % (scheme, hostname, (':%s' % port if port else ''))
         self.host = host
+        self.socket = socket
         self.connector = connector
 
         self.version = version
         self.cert_path = cert_path
-        self.tls = tls
+        self.tls_verify = tls_verify
         self.cert = cert
         self.cert_ca = cert_ca
 
@@ -98,3 +89,37 @@ def parameters(data):
         if isinstance(v, (dict, list, set, tuple)):
             response[k] = json.dumps(v)
     return response
+
+
+def connect(host, tls_verify, cert, cert_ca):
+    parsed = urlparse(host)
+    if parsed.scheme == 'unix':
+        return connect_unix(parsed.path)
+    else:
+        return connect_tcp(host, tls_verify, cert, cert_ca)
+
+
+def connect_unix(path):
+    socket = path
+    connector = aiohttp.TCPConnector(path=path)
+    return 'http://127.0.0.1', socket, connector
+
+
+def connect_tcp(host, tls_verify, cert, cert_ca):
+    parsed = urlparse(host)
+    scheme, hostname, port = parsed.scheme, parsed.hostname, parsed.port
+
+    if scheme == 'tcp':
+        scheme = 'https' if tls_verify else 'http'
+
+    connector = None
+    if scheme == 'https':
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        context.verify_mode = ssl.CERT_NONE
+        if cert:
+            context.load_cert_chain(*cert)
+        connector = aiohttp.TCPConnector(verify_ssl=True,
+                                         ssl_context=context)
+
+    host = '%s://%s%s' % (scheme, hostname, (':%s' % port if port else ''))
+    return host, None, connector

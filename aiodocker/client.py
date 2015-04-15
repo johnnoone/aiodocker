@@ -8,16 +8,16 @@ __all__ = ['Docker']
 
 class Docker:
 
-    def __init__(self, host=None, *, cert_path=None, tls=None):
+    def __init__(self, host=None, *, cert_path=None, tls_verify=None):
         version = '1.17'
 
         if host is None:
             # load local settings with love and magic
             host = os.environ.get('DOCKER_HOST')
-            cert_path = os.environ.get('DOCKER_CERT_PATH')
-            tls = os.environ.get('DOCKER_TLS_VERIFY') in ('1', 'true', 'on')
+            cert_path = os.environ.get('DOCKER_CERT_PATH', '~/.docker')
+            tls_verify = os.environ.get('DOCKER_TLS_VERIFY') in ('1', 'true', 'on')
 
-        self.docker_handler = DockerHandler(host, version, cert_path, tls)
+        self.docker_handler = DockerHandler(host, version, cert_path, tls_verify)
 
     @property
     def host(self):
