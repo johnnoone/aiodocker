@@ -13,11 +13,6 @@ def test_conflict():
         'command': ['echo', 'Foo']
     }
 
-
-    pulled = yield from client.docker_hub.pull('gliderlabs/alpine:3.1')
-    assert pulled, 'Should download alpine:3.1'
-
-
     with pytest.raises(NotFound):
         yield from client.containers.get('aio-1')
 
@@ -34,13 +29,13 @@ def test_conflict():
     with pytest.raises(ConflictError):
         yield from client.containers.create(**conf)
 
-    containers = yield from client.containers.items(status='all')
+    c1 = containers = yield from client.containers.items(status='all')
     assert {'id': container_id} in containers, 'Must match by id'
 
-    containers = yield from client.containers.items(status='running')
+    c2 = containers = yield from client.containers.items(status='running')
     assert {'id': container_id} not in containers, 'Must not be running'
 
-    containers = yield from client.containers.items(status='exited')
+    c3 = containers = yield from client.containers.items(status='exited')
     assert {'id': container_id} in containers, 'Must be exited'
 
     started = yield from client.containers.start(container_id)
@@ -64,3 +59,9 @@ def test_conflict():
 
     deleted = yield from client.containers.delete(container_id)
     assert not deleted, 'Should be already deleted'
+
+    # print(data_1)
+    # print('all', c1)
+    # print('run', c2)
+    # print('exi', c3)
+    # assert False, data_1

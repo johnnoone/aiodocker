@@ -440,7 +440,7 @@ from_container.fields = yield_fields([
     Field('id', ('Id',), None),
     Field('image', ('Image',), None),
     Field('command', ('Command', 'Cmd'), None),
-    Field('created', ('Created',), None),
+    Field('created', ('Created',), from_unixtime),
     Field('names', ('Names',), None),
     Field('status', ('Status',), None),
     Field('ports', ('Ports',), from_ports),
