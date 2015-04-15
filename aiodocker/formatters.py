@@ -33,23 +33,23 @@ class Container(dict):
         if not comparable:
             raise CompareError('any of %s is required' % fields)
 
-        if all('id' in obj for obj in (other, self)):
+        if 'id' in other:
+            if 'id' not in self:
+                raise SparseError('self is too sparse')
             largest, smallest = other['id'], self['id']
             if len(other['id']) < len(self['id']):
                 largest, smallest = self['id'], other['id']
             if not largest.startswith(smallest):
                 return False
-        elif 'id' in other and 'id' not in self:
-            raise SparseError('self is too sparse')
 
-        other_name = other.get('name', None)
         if 'name' in other:
-            if 'name' in self and self['name'] == other_name:
-                return True
-            elif 'names' in self and other_name in self['names']:
-                return True
-            else:
+            names = self.get('names', [])
+            if 'name' in self:
+                names.append(self['name'])
+            if not names:
                 raise SparseError('self is too sparse')
+            if other['name'] in self['names']:
+                return True
         return False
 
     __eq__ = compare
