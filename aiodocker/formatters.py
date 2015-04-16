@@ -48,9 +48,9 @@ class Container(dict):
                 names.append(self['name'])
             if not names:
                 raise SparseError('self is too sparse')
-            if other['name'] in self['names']:
-                return True
-        return False
+            if other['name'] not in self['names']:
+                return False
+        return True
 
     __eq__ = compare
 
