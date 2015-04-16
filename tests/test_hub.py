@@ -9,7 +9,7 @@ from conftest import async_test
 def test_search():
     # TODO mock result
     client = Docker.local_client()
-    info = yield from client.docker_hub.search('ubuntu')
+    info = yield from client.dockerhub.search('ubuntu')
     assert info[0].name == 'ubuntu'
 
 
@@ -19,7 +19,7 @@ def test_pull():
 
     ref = 'gliderlabs/alpine:2.6'
 
-    pulled = yield from client.docker_hub.pull(ref)
+    pulled = yield from client.dockerhub.pull(ref)
     assert pulled, 'Should download gliderlabs/alpine:2.6'
 
     # is it present locally?
@@ -37,7 +37,7 @@ def test_pull():
     started = yield from client.containers.start(container_id)
     assert started
 
-    pulled = yield from client.docker_hub.pull(ref)
+    pulled = yield from client.dockerhub.pull(ref)
     assert pulled, 'Should still download gliderlabs/alpine:2.6'
 
     with pytest.raises(ConflictError):

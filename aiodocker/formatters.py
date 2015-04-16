@@ -31,7 +31,7 @@ class Container(dict):
         fields = ('id', 'name', 'names')
         comparable = any(field in other for field in fields)
         if not comparable:
-            raise CompareError('any of %s is required' % fields)
+            raise CompareError('any of {} is required'.format(fields))
 
         if 'id' in other:
             if 'id' not in self:
@@ -70,10 +70,10 @@ class Image(dict):
         if not isinstance(other, dict):
             raise CompareError('other has the wrong type')
 
-        fields = ('repo_tags', 'id')
+        fields = ('repo_tag', 'id')
         comparable = any(field in other for field in fields)
         if not comparable:
-            raise CompareError('any of %s is required' % fields)
+            raise CompareError('any of {} is required'.format(fields))
 
         if 'id' in other:
             if 'id' not in self:
@@ -84,10 +84,13 @@ class Image(dict):
             if not largest.startswith(smallest):
                 return False
 
-        if 'repo_tags' in other:
-            if 'repo_tags' not in self:
+        if 'repo_tag' in other:
+            tags = self.get('repo_tags', [])
+            if 'repo_tag' in self:
+                tags.append(self['repo_tag'])
+            if not tags:
                 raise SparseError('self is too sparse')
-            if self['repo_tags'] != other['repo_tags']:
+            if other['repo_tag'] not in tags:
                 return False
 
         return True

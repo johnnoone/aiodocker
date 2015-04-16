@@ -1,10 +1,11 @@
 from aiodocker.util import task
 from aiodocker.exceptions import NotFound, ConflictError, BuildError
 from aiodocker.exceptions import ServerError, UnexpectedError
-from aiodocker.exceptions import ValidationError
+from aiodocker.exceptions import ValidationError, CreateError
 from aiodocker.formatters import from_images, from_history
 from aiodocker.helpers import stream_raw_json
-from aiodocker.util import parse_name, make_dockerfile
+from aiodocker.util import parse_name, make_dockerfile, tar_reader
+import io
 import json
 import logging
 import re
@@ -57,10 +58,11 @@ class ImagesEndpoint:
         if reader.content_type:
             headers['Content-Type'] = reader.content_type
 
-        response = yield from self.api.post('/build',
+        response = yield from self.api.post(path,
                                             params=params,
                                             headers=headers,
-                                            data=data)
+                                            data=data,
+                                            chunked=512)
         if response.status == 200:
             image_id = None
             PATTERN = re.compile('Successfully built (?P<image_id>[0-9a-f]+)')
@@ -75,17 +77,10 @@ class ImagesEndpoint:
                         image_id = match.group('image_id')
             return image_id
 
-            raise NotImplementedError()
-
         data = yield from response.text()
         if response.status == 500:
             raise ServerError(data)
         raise UnexpectedError(response.status, data)
-
-    @task
-    def create(self):
-        path = '/images/create'
-        raise NotImplementedError()
 
     @task
     def inspect(self, ref):
@@ -178,5 +173,122 @@ class ImagesEndpoint:
         if response.status == 409:
             raise ConflictError(data)
         elif response.status == 500:
+            raise ServerError(data)
+        raise UnexpectedError(response.status, data)
+
+    @task
+    def export(self, ref, *, into=None):
+        """Export an image.
+
+        Parameters:
+            ref (str): {repo}:{tag}
+            into (file): export into this file
+        Returns:
+            file: a tar file object.
+        """
+        path = '/images/get'
+        params = {
+            'names': ref
+        }
+
+        file = into or io.BytesIO()
+        if isinstance(file, io.TextIOWrapper):
+            write = lambda x: file.write(x.decode('utf-8'))
+        else:
+            write = lambda x: file.write(x)
+
+        response = yield from self.api.get(path, params=params)
+        if response.status == 200:
+            content = response.content
+            chunk = yield from content.read(512)
+            while chunk:
+                write(chunk)
+                chunk = yield from content.read(512)
+            return file
+
+        data = yield from response.text()
+        if response.status == 404:
+            raise NotFound(data)
+        elif response.status == 500:
+            raise ServerError(data)
+        raise UnexpectedError(response.status, data)
+
+    @task
+    def create_from_src(self, ref, *, src, tag=None):
+        """Create an new image from a tar file.
+
+        Parameters:
+            src (file): a file object
+        """
+
+        if tag and ':' in ref:
+            raise ValidationError('tag cannot be declared '
+                                  'into image and tag parameters')
+        elif tag is None:
+            ref, tag = parse_name(ref)
+
+        path = '/images/create'
+        params = {
+            'fromSrc': '-',
+            'repo': ref,
+            'tag': tag
+        }
+        headers = {}
+
+        reader = yield from tar_reader(src)
+        data = reader.content
+        if reader.encoding:
+            headers['Encoding'] = reader.encoding
+
+        if reader.content_type:
+            headers['Content-Type'] = reader.content_type
+
+        response = yield from self.api.post(path,
+                                            params=params,
+                                            headers=headers,
+                                            data=data,
+                                            chunked=512)
+        if response.status == 200:
+            for data in (yield from stream_raw_json(response)):
+                log.info(data)
+                if 'error' in data:
+                    raise CreateError(data)
+                if 'stream' in data:
+                    data = data['stream']
+            return True
+
+        data = yield from response.text()
+        if response.status == 500:
+            raise ServerError(data)
+        raise UnexpectedError(response.status, data)
+
+    @task
+    def load(self, src):
+        """Load exported images from tarfile.
+
+        Parameters:
+            src (file): a file object
+        """
+
+        path = '/images/load'
+        headers = {}
+
+        reader = yield from tar_reader(src)
+        data = reader.content
+        if reader.encoding:
+            headers['Encoding'] = reader.encoding
+
+        if reader.content_type:
+            headers['Content-Type'] = reader.content_type
+
+        response = yield from self.api.post(path,
+                                            headers=headers,
+                                            data=data,
+                                            chunked=512)
+        if response.status == 200:
+            return True
+
+        data = yield from response.text()
+        if response.status == 500:
             raise ServerError(data)
         raise UnexpectedError(response.status, data)

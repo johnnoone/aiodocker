@@ -17,6 +17,11 @@ class NotFound(Exception):
     pass
 
 
+class CreateError(Exception):
+    """Raised when image was not created"""
+    pass
+
+
 class NotRunning(Exception):
     """Raised when image or container was not running"""
     pass

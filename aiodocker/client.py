@@ -2,33 +2,46 @@ from . import endpoints
 from .handlers import DockerHandler
 from .util import lazy_property
 import os
+import logging
 
 __all__ = ['Docker']
+
+log = logging.getLogger(__name__)
 
 
 class Docker:
 
-    def __init__(self, host=None, *, cert_path=None, tls_verify=None):
+    def __init__(self, host=None, *, cert_path=None, tls_verify=None, **opts):
+        """
+
+        .. note::
+            arguments must follow the DOCKER_VARS
+        """
+
         version = '1.17'
         self.api = DockerHandler(host, version, cert_path, tls_verify)
+        if opts:
+            log.warn('Don\'t know how to handle %s' % opts)
 
     @classmethod
     def local_client(cls):
         """
-        Scaffold a local client.
+        Scaffold a local client with env variables.
         """
-        host = os.environ.get('DOCKER_HOST')
-        cert_path = os.environ.get('DOCKER_CERT_PATH', '~/.docker')
-        tls_verify = os.environ.get('DOCKER_TLS_VERIFY') in ('1', 'true', 'on')
-        return cls(host, cert_path=cert_path, tls_verify=tls_verify)
 
-    @property
-    def host(self):
-        return self.api.host
+        opts = {
+            'host': 'http://127.0.0.1:3000',
+            'tls_verify': True,
+            'cert_path': '~/.docker'
+        }
 
-    @property
-    def api_version(self):
-        return self.api.version
+        for key, value in os.environ.items():
+            if key.startswith('DOCKER_'):
+                key = key[7:].lower()
+                if key == 'tls_verify':
+                    value = value in ('1', 'true', 'on')
+                opts[key] = value
+        return cls(**opts)
 
     @lazy_property
     def containers(self):
@@ -43,7 +56,7 @@ class Docker:
         return endpoints.MiscEndpoint(self.api)
 
     @lazy_property
-    def docker_hub(self):
+    def dockerhub(self):
         """Connect to DockerHub"""
         return endpoints.DockerHubEndpoint(self.api)
 

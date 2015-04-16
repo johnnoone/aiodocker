@@ -8,7 +8,7 @@ import os.path
 from tarfile import TarError, TarFile, TarInfo
 from tempfile import NamedTemporaryFile
 
-__all__ = ['make_dockerfile', 'validate_file']
+__all__ = ['make_dockerfile', 'tar_reader', 'validate_file']
 
 
 class TarReader(io.IOBase):
@@ -110,3 +110,39 @@ def validate_file(src):
     elif isinstance(src, io.BytesIo):
         return '-', src
     raise ValueError('src must be a filename')
+
+
+@asyncio.coroutine
+def tar_reader(obj):
+
+    if isinstance(obj, TarReader):
+        return obj
+
+    if isinstance(obj, TarFile):
+        obj.close()
+        obj = obj.fileobj
+
+    if isinstance(obj, gzip.GzipFile):
+        return TarReader(obj, 'gzip')
+
+    if isinstance(obj, bz2.BZ2File):
+        return TarReader(obj, 'bz2')
+
+    if isinstance(obj, lzma.LZMAFile):
+        return TarReader(obj, 'xz')
+
+    if isinstance(obj, io.TextIOWrapper):
+        # an instance provided by open('/file/name', 'r')
+        return TarReader(obj)
+
+    if isinstance(obj, io.StringIO):
+        obj = io.BytesIO(obj.getvalue().encode('utf-8'))
+
+    if isinstance(obj, io.BytesIO):
+        return TarReader(obj)
+
+    if isinstance(obj, io.BufferedIOBase):
+        # an instance provided by open('/file/name', 'rb')
+        return TarReader(obj)
+
+    raise ValueError('bad object %r' % obj)
