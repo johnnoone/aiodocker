@@ -23,24 +23,6 @@ class lazy_property:
         return self
 
 
-def read_stream(response):
-    content_type = response.headers['Content-Type']
-    content = response.content
-    while not content.at_eof():
-        header = yield from content.read(8)
-        type, length = struct.unpack('>BxxxL', header)
-        data = yield from content.read(length)
-
-        Class = {0: StandardIn, 1: StandardOut, 2: StandardError}.get(type)
-        data = Class(data, 'utf-8')
-        if content_type == 'application/vnd.docker.raw-stream':
-            yield data
-        elif content_type == 'application/json':
-            yield data
-        else:
-            yield data
-
-
 class StandardIn(str):
     pass
 

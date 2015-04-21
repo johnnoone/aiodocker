@@ -30,7 +30,7 @@ def test_pull():
     container_id = yield from client.containers.create(**{
         'name': 'aio-2',
         'image': 'gliderlabs/alpine:2.6',
-        'command': ['echo', 'bar']
+        'command': ['sleep', '60']
     })
     assert container_id
 

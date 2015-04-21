@@ -34,6 +34,8 @@ def stream_raw(response):
     content = response.content
     while not content.at_eof():
         header = yield from content.read(8)
+        if not header:
+            break
         type, length = struct.unpack('>BxxxL', header)
         data = yield from content.read(length)
 

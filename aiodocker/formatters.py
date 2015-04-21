@@ -185,6 +185,11 @@ def from_env(data):
     return response
 
 
+def from_exec_inspect(data):
+    response, remains = vars(from_exec_inspect)['fields'].consume(data)
+    return response
+
+
 def from_exposed_ports(data):
     """
     >>> from_exposed_ports({'42/udp': [{}]})
@@ -554,6 +559,7 @@ from_container_config.fields = yield_fields([
 
 from_container_inspect.fields = yield_fields([
     Field('app_armor_profile', ('AppArmorProfile',), None),
+    Field('applied_volumes_from', ('AppliedVolumesFrom',), None),  # exec inspects
     Field('args', ('Args',), None),
     Field('config', ('Config',), from_container_config),
     Field('created', ('Created',), from_isotime),
@@ -573,6 +579,7 @@ from_container_inspect.fields = yield_fields([
     Field('resolv_conf_path', ('ResolvConfPath',), None),
     Field('restart_count', ('RestartCount',), None),
     Field('state', ('State',), from_container_state),
+    Field('update_dns', ('UpdateDns',), None),  # exec inspects
     Field('volumes', ('Volumes',), from_volumes),
     Field('volumes_rw', ('VolumesRW',), None)
 ])
@@ -593,6 +600,17 @@ from_device.fields = yield_fields([
     Field('path_on_host', ('PathOnHost',), None),
     Field('path_in_container', ('PathInContainer',), None),
     Field('cgroup_permissions', ('CgroupPermissions'), None),
+])
+
+from_exec_inspect.fields = yield_fields([
+    Field('container', ('Container',), from_container_inspect),
+    Field('exit_code', ('ExitCode',), None),
+    Field('id', ('ID',), None),
+    Field('open_stderr', ('OpenStderr',), None),
+    Field('open_stdin', ('OpenStdin',), None),
+    Field('open_stdout', ('OpenStdout',), None),
+    Field('process_config', ('ProcessConfig',), None),
+    Field('running', ('Running',), None),
 ])
 
 from_history_log.fields = yield_fields([
@@ -669,8 +687,14 @@ from_info.fields = yield_fields([
 from_network_settings.fields = yield_fields([
     Field('bridge', ('Bridge',), None),
     Field('gateway', ('Gateway',), None),
+    Field('global_ipv6_address', ('GlobalIPv6Address',), None),  # exec inspect
+    Field('global_ipv6_address_len', ('GlobalIPv6PrefixLen',), None),  # exec inspect
+    Field('gateway', ('Gateway',), None),
+    Field('ipv6_gateway', ('IPv6Gateway',), None),  # exec inspect
     Field('ip_address', ('IPAddress',), None),
     Field('ip_prefix_len', ('IPPrefixLen',), None),
+    Field('link_local_ipv6_address', ('LinkLocalIPv6Address',), None),  # exec inspect
+    Field('link_local_ipv6_prefix_len', ('LinkLocalIPv6PrefixLen',), None),  # exec inspect
     Field('mac_address', ('MacAddress',), None),
     Field('port_mapping', ('PortMapping',), None),
     Field('ports', ('Ports',), None)

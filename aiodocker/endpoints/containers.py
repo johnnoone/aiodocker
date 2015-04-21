@@ -1,11 +1,11 @@
+from aiodocker.exceptions import ServerError, UnexpectedError, ConflictError
+from aiodocker.exceptions import NotFound, NotRunning, ValidationError
 from aiodocker.formatters import from_containers
 from aiodocker.formatters import from_container_inspect
 from aiodocker.formatters import from_container_top
 from aiodocker.formatters import to_container_config
-from aiodocker.exceptions import ServerError, UnexpectedError, ConflictError
-from aiodocker.exceptions import NotFound, NotRunning, ValidationError
+from aiodocker.helpers import stream_raw
 from aiodocker.util import task
-from aiodocker.util import read_stream
 from copy import copy
 import asyncio
 import json
@@ -395,9 +395,7 @@ class ContainerLog:
 
         response = yield from self.api.get(path, params=params)
         if response.status == 200:
-            data = yield from response.text()
-            return read_stream(response)
-            # return iter(data.split('\n'))
+            return stream_raw(response)
 
         data = yield from response.text()
         if response.status == 404:
@@ -426,14 +424,3 @@ class ContainerLog:
     def follow(self):
         # TODO finish logs, with log follows
         raise NotImplementedError()
-
-
-class ContainerExec:
-
-    def __init__(self, api, ref, *, stdout=None, stderr=None):
-        self.api = api
-        self.ref = ref
-
-    def start(self):
-        """docstring for start"""
-        pass

@@ -10,7 +10,7 @@ def test_conflict():
     conf = {
         'name': 'aio-1',
         'image': 'gliderlabs/alpine:3.1',
-        'command': ['echo', 'Foo']
+        'command': ['sleep', '60']
     }
 
     with pytest.raises(NotFound):

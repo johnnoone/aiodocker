@@ -52,6 +52,10 @@ class Docker:
         return endpoints.ImagesEndpoint(self.api)
 
     @lazy_property
+    def executors(self):
+        return endpoints.ExecEndpoint(self.api)
+
+    @lazy_property
     def misc(self):
         return endpoints.MiscEndpoint(self.api)
 
