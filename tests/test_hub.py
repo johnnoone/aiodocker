@@ -44,14 +44,17 @@ def test_pull():
         destroyed = yield from client.images.delete(ref)
         assert not destroyed, 'Should not allow destroy'
 
+    stoped = yield from client.containers.stop(container_id)
+    assert stoped, 'Should stop container'
+
     removed = yield from client.containers.remove(container_id)
     assert removed, 'Should remove container'
 
     images = yield from client.images.items()
-    assert {'repo_tags': [ref]} in images, 'Should be present'
+    assert {'repo_tag': ref} in images, 'Should be present'
 
     destroyed = yield from client.images.delete(ref, force=True)
     assert destroyed, 'Should be destroyed'
 
     images = yield from client.images.items()
-    assert {'repo_tags': [ref]} not in images, 'Should be absent'
+    assert {'repo_tag': ref} not in images, 'Should be absent'

@@ -32,7 +32,7 @@ def test_execute():
     yield from client.executors.start(exec_id)
 
     results = yield from client.executors.inspect(exec_id)
-    print(started, results)
+    assert results['exit_code'] == 0, 'should been 0'
 
     # end of the test
 
@@ -40,5 +40,4 @@ def test_execute():
     assert stoped, 'Should be stoped'
 
     deleted = yield from client.containers.delete(container_id)
-    assert not deleted, 'Should be already deleted'
-    assert False
+    assert deleted, 'Should be deleted'
