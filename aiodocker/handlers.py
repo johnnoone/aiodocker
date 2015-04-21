@@ -2,24 +2,19 @@ from aiodocker.util import task
 from urllib.parse import urlparse
 import aiohttp
 import json
+import logging
 import os.path
 import ssl
 
 __all__ = ['DockerHandler']
 
+log = logging.getLogger(__name__)
+
 
 class DockerHandler:
 
     def __init__(self, host, version, cert_path=None, tls_verify=None):
-        cert, cert_ca = None, None
-        if cert_path:
-            cert_path = os.path.expanduser(cert_path)
-            cert = (
-                os.path.join(cert_path, 'cert.pem'),
-                os.path.join(cert_path, 'key.pem')
-            )
-            cert_ca = os.path.join(cert_path, 'ca.pem')
-
+        cert, cert_ca = search_certs(cert_path)
         host, socket, connector = connect(host, tls_verify, cert, cert_ca)
 
         self.host = host
@@ -123,3 +118,31 @@ def connect_tcp(host, tls_verify, cert, cert_ca):
 
     host = '%s://%s%s' % (scheme, hostname, (':%s' % port if port else ''))
     return host, None, connector
+
+
+def search_certs(cert_path):
+    cert, cert_ca = None, None
+
+    if not cert_path:
+        return cert, cert_ca
+
+    cert_path = os.path.expanduser(cert_path)
+
+    a = os.path.join(cert_path, 'cert.pem')
+    b = os.path.join(cert_path, 'key.pem')
+    if not os.path.isfile(a):
+        log.warn('cert file is missing %s' % a)
+        return cert, cert_ca
+
+    if os.path.isfile(b):
+        cert = a, b
+    else:
+        log.info('key file not found %s' % b)
+        cert = a,
+
+    c = os.path.join(cert_path, 'ca.pem')
+    if os.path.isfile(c):
+        cert_ca = c
+    else:
+        log.info('ca file is missing %s' % c)
+    return cert, cert_ca

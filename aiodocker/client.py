@@ -31,7 +31,7 @@ class Docker:
 
         opts = {
             'host': 'http://127.0.0.1:3000',
-            'tls_verify': True,
+            'tls_verify': False,
             'cert_path': '~/.docker'
         }
 
