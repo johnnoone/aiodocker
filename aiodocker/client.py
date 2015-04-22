@@ -1,6 +1,6 @@
 from . import endpoints
 from .handlers import DockerHandler
-from .util import lazy_property
+from .util import lazy_property, get_config_from_env
 import os
 import logging
 
@@ -29,18 +29,10 @@ class Docker:
         Scaffold a local client with env variables.
         """
 
-        opts = {
-            'host': 'http://127.0.0.1:3000',
-            'tls_verify': False,
-            'cert_path': '~/.docker'
-        }
-
-        for key, value in os.environ.items():
-            if key.startswith('DOCKER_'):
-                key = key[7:].lower()
-                if key == 'tls_verify':
-                    value = value in ('1', 'true', 'on')
-                opts[key] = value
+        opts = get_config_from_env()
+        opts.setdefault('host', 'http://127.0.0.1:3000')
+        opts.setdefault('tls_verify', False)
+        opts.setdefault('cert_path', '~/.docker')
         return cls(**opts)
 
     @lazy_property
@@ -70,4 +62,4 @@ class Docker:
         raise AttributeError('attribute not found %r' % name)
 
     def __repr__(self):
-        return '<Docker(host=%r)>' % self.host
+        return '<Docker(host=%r)>' % self.api.host

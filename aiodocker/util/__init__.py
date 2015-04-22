@@ -1,4 +1,5 @@
 from .async import *  # noqa
+from .config import * # noqa
 from .files import *  # noqa
 from .names import *  # noqa
 
